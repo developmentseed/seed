@@ -1,0 +1,16 @@
+div.filter-options div.form-item,
+div.filter-options div.filter-help {
+  float:right;
+  }
+
+.crayon:hover span.crayon-popup {
+  left:0px;
+  right:50%;
+  margin-right:-24px;
+  background-position: 90% 100%;
+  }
+
+span.crayon-marker {
+  margin-right:0em;
+  margin-left:.5em;
+  }

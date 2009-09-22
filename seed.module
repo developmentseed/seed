@@ -1,0 +1,723 @@
+<?php
+
+define('SEED_TAXONOMY_FIELDTERMS', 1);
+define('SEED_TAXONOMY_FIELDLIST', 2);
+
+/**
+ * Implementation of hook_theme().
+ */
+function seed_theme() {
+  $path = drupal_get_path('module', 'seed');
+  $base = array('file' => 'theme.inc', 'path' => "$path/theme");
+
+  // We need to actually load the theme.inc at time of registry build.
+  module_load_include('inc', 'seed', 'theme/theme');
+
+  $items = array(
+    'seed_audio' => $base,
+    'seed_thickbox' => $base,
+    'seed_byline' => $base,
+    'seed_crayon' => $base,
+    'seed_crayon_popup' => $base,
+    'seed_crayon_swatch' => $base,
+    'seed_taxonomy_split' => $base + array('sorted_terms' => array()),
+    'seed_filter_form' => $base,
+    'seed_term_list' => $base,
+    'seed_numbered_element' => $base,
+    'seed_taxonomy_display_form' => $base,
+
+    // Template overrides
+    'node_form' => $base + array(
+      'arguments' => array('form' => array()),
+      'template' => 'node_form',
+    ),
+    'user_profile_form' => $base + array(
+      'arguments' => array('form' => array()),
+      'template' => 'node_form',
+    ),
+    'user_login' => $base + array(
+      'arguments' => array('form' => array()),
+      'template' => 'user_form',
+    ),
+    'user_pass' => $base + array(
+      'arguments' => array('form' => array()),
+      'template' => 'user_form',
+    ),
+    'user_picture' => $base + array(
+      'arguments' => array('account' => array()),
+      'template' => 'user_picture',
+    ),
+    'views_view_summary' => $base + array(
+      'arguments' => array('account' => array()),
+      'template' => 'views_view_summary',
+    ),
+  );
+  if (module_exists('content')) {
+    $items['seed_faux_field'] = $base + array(
+      'arguments' => array('element' => NULL),
+      'template' => 'content-field',
+      'path' => drupal_get_path('module', 'content') . '/theme',
+    );
+  }
+  return $items;
+}
+
+/**
+ * Implementation of hook_theme_registry_alter().
+ */
+function seed_theme_registry_alter(&$theme_registry) {
+  $path = drupal_get_path('module', 'seed');
+  $base = array('file' => 'theme.inc', 'path' => "$path/theme");
+
+  // We need to actually load the theme.inc at time of registry build.
+  module_load_include('inc', 'seed', 'theme/theme');
+
+  foreach ($theme_registry as $hook => $data) {
+    switch ($hook) {
+      // Hijack functions
+      case 'upload_attachments':
+      case 'filter_tips_more_info':
+        if (!isset($theme_registry[$hook]['type']) || !in_array($theme_registry[$hook]['type'], array('base_theme_engine', 'theme_engine'))) {
+          $theme_registry[$hook] = $base + $theme_registry[$hook];
+          $theme_registry[$hook]['function'] = 'seed_'. $hook;
+        }
+        break;
+    }
+  }
+}
+
+/**
+ * Implementation of hook_strongarm().
+ * Forces use of seed 404 callback if strongarm module is present.
+ */
+function seed_strongarm() {
+  $conf = array();
+  $conf['site_403'] = 'access-denied';
+  $conf['site_404'] = 'not-found';
+  return $conf;
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function seed_menu() {
+  $items = array();
+  $items['not-found'] = array(
+    'title' => 'Page not found',
+    'page callback' => 'seed_404',
+    'page arguments' => array(),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  $items['access-denied'] = array(
+    'title' => 'Access denied',
+    'page callback' => 'seed_403',
+    'page arguments' => array(),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/settings/seed'] = array(
+    'title' => 'Seed settings',
+    'description' => 'Settings for the DS customization module seed.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('seed_settings_form_basic'),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'seed.admin.inc',
+  );
+  $items['admin/settings/seed/basic'] = array(
+    'title' => 'Basic',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  if (module_exists('content')) {
+    foreach (node_get_types() as $type) {
+      $type_name = $type->type;
+      $content_type = content_types($type_name);
+      $type_url_str = $content_type['url_str'];
+      $items['admin/content/node-type/'. $type_url_str .'/taxonomy-display'] = array(
+        'title' => 'Taxonomy display',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('seed_taxonomy_display_form', $type_name),
+        'access arguments' => array('administer content types'),
+        'type' => MENU_LOCAL_TASK,
+        'weight' => 10,
+        'file' => 'seed.admin.inc',
+      );
+    }
+  }
+  return $items;
+}
+
+/**
+ * 404 page.
+ */
+function seed_404() {
+  return "<div class='not-found'>". t('The requested page could not be found.') ."</div>";
+}
+
+/**
+ * 403 page.
+ */
+function seed_403() {
+  return "<div class='access-denied'>". t('You are not authorized to access this page.') ."</div>";
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function seed_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
+  switch ($op) {
+    case 'view':
+      // Wrap node body
+      $node->content['body']['#prefix'] = "<div class='node-body'>";
+      $node->content['body']['#suffix'] = "</div>";
+
+      // Book Navigation
+      if (module_exists('book') && book_type_is_allowed($node->type)) {
+        $seed_book = variable_get('seed_book', array());
+        if (empty($seed_book['book_nav'])) {
+          unset($node->content['book_navigation']);
+        }
+      }
+      // Taxonomy display
+      if (module_exists('content')) {
+        seed_taxonomy_display($node, $teaser);
+      }
+      // Attachment Handling
+      if (!empty($node->files)) {
+        $attachment_settings = variable_get('seed_attachments', array(''));
+        if (!empty($attachment_settings['imagehandling']) || !empty($attachment_settings['audiohandling'])) {
+          foreach($node->files as $k => $v) {
+            if($v->list === '1') {
+              $mime = substr($v->filemime,0,5);
+              switch($mime) {
+                case 'audio':
+                  if($attachment_settings['audiohandling'] == TRUE) {
+                    $node->audio[] = $v;
+                    unset($node->files[$k]);
+                    }
+                  break;
+                case 'image':
+                  if($attachment_settings['imagehandling'] == TRUE) {
+                    $node->thickbox_images[] = $v;
+                    unset($node->files[$k]);
+                    }  
+                  break;
+                default:
+                  break;
+              }
+            }
+          };
+        if (!$teaser && user_access('view uploaded files')) {
+          if(!empty($node->thickbox_images)) {
+            $node->content['thickbox_images'] = array(
+              '#value' => theme('seed_thickbox', $node->thickbox_images),
+              '#weight' => 40,
+              );
+            }
+          if(!empty($node->audio)) {
+            $node->content['audio'] = array(
+              '#value' => theme('seed_audio', $node->audio),
+              '#weight' => 30,
+              );
+            }
+            $node->content['files'] = array(
+              '#value' => theme('upload_attachments', $node->files),
+              '#weight' => 50,
+              );
+          }
+        }
+      }
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function seed_form_alter(&$form, $form_state, $form_id) {
+  switch ($form_id) {
+    case 'system_site_information_settings':
+    // Allow for custom page title on site front page
+      $form['front_page_title']['#type'] = 'textfield'; 
+      $form['front_page_title']['#title'] = t('Custom Page Title on Homepage');
+      $form['front_page_title']['#default_value'] = variable_get('front_page_title', '');
+      $form['front_page_title']['#description'] = t('Leave blank to use title of view on homepage');
+      $form['front_page_title']['#required'] = FALSE; 
+      $form['buttons']['#weight'] = 100;
+      break;
+    case 'search_theme_form':
+      // Hide Label from theme search form
+      unset($form['search_theme_form']['#title']);
+      break;
+    case 'block_admin_configure':
+      // Collapse now unused block vis settings.
+      // Not removing them since there are still some corner cases
+      // where it's expedient to use these hacks.
+      $form['user_vis_settings']['#collapsed'] =
+      $form['role_vis_settings']['#collapsed'] = 
+      $form['page_vis_settings']['#collapsed'] = TRUE;
+      break;
+  }
+  if ($form['#id'] == 'node-form') {
+    // Hiding the ridiculous body splitting shiz
+    $form['body_field']['teaser_js']['#type'] = 'hidden';
+    $form['body_field']['teaser_include']['#type'] = 'hidden';
+    if (!empty($form['body_field']['body']['#rows']) && $form['body_field']['body']['#rows'] > 10) {
+      $form['body_field']['body']['#rows'] = 10;
+    }
+
+    // Remove revision information fields for most users
+    if (isset($form['revision_information']) && !user_access('administer nodes')) {
+      $form['revision_information']['#access'] = FALSE;
+    }
+  }
+  if (!module_exists('wysiwyg')) {
+    _seed_filter_form_alter($form);
+  }
+}
+
+/**
+ * Recurses through forms for input filter fieldsets and alters them.
+ * @TODO: this function cannot process custom CCK-defined form elements,
+ * as their filter forms are generated after form_alters() are run.
+ */
+function _seed_filter_form_alter(&$form) {
+  $found = array();
+  foreach (element_children($form) as $id) {
+    // We've found a filter form element, alter it
+    if (!empty($form[$id]['#type']) && $form[$id]['#type'] == 'fieldset' && !empty($form[$id]['#element_validate']) && $form[$id]['#element_validate'][0] == 'filter_form_validate') {
+      $found[] = $id;
+      $options = array();
+      // Radios have been processed by this point
+      $default_value = 0;
+      foreach (element_children($form[$id]) as $format) {
+        if (!empty($form[$id][$format]['#type']) && $form[$id][$format]['#type'] == 'radio') {
+          $default_value = empty($default_value) ? $form[$id][$format]['#default_value'] : $default_value;
+          $options[$format] = $form[$id][$format]['#title'];
+        }
+        unset($form[$id][$format]);
+      }
+      $form[$id]['#type'] = 'select';
+      $form[$id]['#options'] = $options;
+      $form[$id]['#default_value'] = $default_value;
+      $form[$id]['#theme'] = 'seed_filter_form';
+      unset($form[$id]['#element_validate']); // We don't need a custom validator with selects
+    }
+    else if ($id == 'format' && !empty($form[$id]['format']['guidelines'])) {
+      $found[] = $id;
+      $form[$id]['#theme'] = 'seed_filter_form';
+    }
+    // Recurse down elements with children
+    else {
+      _seed_filter_form_alter($form[$id]);
+    }
+  }
+  // Do some theme magic to elements that the filter format targets
+  $keys = element_children($form);
+  foreach ($found as $id) {
+    $index = array_search($id, $keys);
+    if ($index !== FALSE && $index > 0) {
+      $filter_target = $keys[$index - 1];
+
+      // I hate this shit, but form theme stack doesn't leave many other elegant options
+      $form[$filter_target]['#prefix'] = '<div class="filter-target">';
+      $form[$filter_target]['#suffix'] = '</div>';
+    }
+  }
+}
+
+/**
+ * Implementation of hook_link().
+ * Adds print stack handling. Must be supported by the theme layer --
+ * e.g. use the Tao base theme for full print support.
+ */
+function seed_link($type, $object, $teaser = FALSE) {
+  $links = array();
+  if ($type == 'node' && menu_get_object() === $object) {
+    $links['print'] = array(
+      'title' => t('Print'),
+      'href' => $_GET['q'],
+      'query' => 'print',
+    );
+    if (module_exists('book') && book_type_is_allowed($object->type)) {
+      $links['print_recurse'] = array(
+        'title' => t('Print entire section'),
+        'href' => $_GET['q'],
+        'query' => 'print&book_recurse'
+      );
+    }
+  }
+  if (isset($_GET['ajax']) && node_access('update', $object)) {
+    $links['edit'] = array(
+      'title' => t('Edit'),
+      'href' => "node/{$object->nid}/edit",
+    );
+  }
+  return $links;
+}
+
+/**
+ * Implementation of hook_link_alter().
+ */
+function seed_link_alter(&$links, $node) {
+  if (!empty($links['book_printer'])) {
+    unset($links['book_printer']);
+  }
+}
+
+/**
+ * Implementation of hook_views_api().
+ */
+function seed_views_api() {
+  return array('api' => 2);
+}
+
+/**
+ * Taxonomy display helper for nodes.
+ */
+function seed_taxonomy_display(&$node, $teaser = FALSE) {
+  $var = variable_get("seed_taxonomy_display_{$node->type}", array());
+  if (!empty($var) && !empty($node->taxonomy)) {
+    static $vocabs;
+    // Grab vocabs
+    if (!isset($vocabs)) {
+      $vocabs = taxonomy_get_vocabularies();
+    }
+
+    // Group terms by vid first
+    $terms = array();
+    foreach ($node->taxonomy as $tid => $term) {
+      $terms[$term->vid][$tid] = $term;
+    }
+
+    // Iterate over grouped terms
+    foreach ($var as $vid => $settings) {
+      if (!empty($terms[$vid])) {
+        // Get the display label
+        $label = !empty($settings['label']) ? check_plain($settings['label']) : $vocabs[$vid]->name;
+        $weight = !empty($settings['weight']) ? $settings['weight'] : 0;
+        $content = '';
+
+        if (menu_get_object() === $node) {
+          $page = TRUE;
+          $display = $settings['page'];
+        }
+        else {
+          $page = FALSE;
+          $display = $settings['teaser'];
+        }
+
+        switch ($display) {
+          case SEED_TAXONOMY_FIELDTERMS:
+          case SEED_TAXONOMY_FIELDLIST:
+            $items = array();
+            foreach ($terms[$vid] as $term) {
+              $items[] = l($term->name, taxonomy_term_path($term));
+            }
+            $content = ($display == SEED_TAXONOMY_FIELDTERMS) ? implode(", ", $items) : theme('item_list', $items);
+            break;
+        }
+
+        if (!empty($content)) {
+          $element = array(
+            '#weight' => $weight,
+            'element' => array(
+              '#theme' => 'seed_faux_field',
+              'node' => $node,
+              'teaser' => $teaser,
+              'page' => $page,
+              'items' => array(
+                array('view' => $content),
+              ),
+              'field_name' => '',
+              'field_type' => 'taxonomy',
+              'label' => $label,
+              'label_display' => 'above',
+              'field_empty' => FALSE,
+            ),
+          );
+
+          $node->content["seed_taxonomy_{$vid}"] = $element;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implementations of hook_date_format_types().
+ */
+function seed_date_format_types() {
+  return array(
+    'day' => t('Day'),
+    'time' => t('Time'),
+    'month_within' => t('Within current month'),
+    'month_after' => t('After current month'),
+  );
+}
+
+/**
+ * Implementation of hook_date_formats().
+ */
+function seed_date_formats() {
+  $condensed = array(
+    'day' => array(
+      'l, M j',
+      'l, j M',
+    ),
+    'time' => array(
+      'g:ia',
+      'H:i',
+    ),
+    'month_within' => array(
+      'g:ia D M j',
+      'H:i D M j',
+      'g:ia D j M',
+      'H:i D j M',
+    ),
+    'month_after' => array(
+      'g:ia M j, Y',
+      'H:i M j, Y',
+      'g:ia j M, Y',
+      'H:i j M, Y',
+    ),
+  );
+  $formats = array();
+  foreach ($condensed as $type => $f) {
+    foreach ($f as $format) {
+      $formats[] = array(
+        'type' => $type,
+        'format' => $format,
+        'locales' => array(),
+      );
+    }
+  }
+  return $formats;
+}
+
+/**
+ * Custom date formatter which tries to provide the most easily
+ * understood date format given the date's proximity to the current time.
+ */
+function seed_rel_date($timestamp) {
+  static $slots, $formats;
+  // Static cache formats, slots. These aren't expensive calls, but when we
+  // are called many times on a page load it becomes costly to repeat this logic.
+  if (!isset($slots)) {
+    $now = time();
+    $slots = array(
+      'today' => format_date($now, 'custom', 'MjY'),
+      'yesterday' => format_date($now - (24*60*60), 'custom', 'MjY'),
+      'month_within' => $now - 3600 * 24 * 30,
+    );
+    $formats = array(
+      'time' => variable_get('date_format_time', 'g:ia'),
+      'month_within' => variable_get('date_format_month_within', 'g:ia D M j'),
+      'month_after' => variable_get('date_format_month_after', 'g:ia M j, Y'),
+    );
+  }
+  $day = format_date($timestamp, 'custom', 'MjY');
+  if ($day == $slots['today']) {
+    return t('!time Today', array('!time' => format_date($timestamp, 'custom', $formats['time'])));
+  }
+  else if ($day == $slots['yesterday']) {
+    return t('!time Yesterday', array('!time' => format_date($timestamp, 'custom', $formats['time'])));
+  }
+  else if ($timestamp < $slots['month_within'] ) {
+    return format_date($timestamp, 'custom', $formats['month_within']);
+  }
+  else {
+    return format_date($timestamp, 'custom', $formats['month_after']);
+  }
+}
+
+/**
+ * Turn string into CSS id/class -- from Zen theme
+ */
+function seed_id_safe($string) {
+  if (is_numeric($string{0})) {
+    // if the first character is numeric, add 'n' in front
+    $string = 'n'. $string;
+  }
+  return strtolower(preg_replace('/[^a-zA-Z0-9-]+/', '-', $string));
+}
+
+/**
+ * Preprocess functions
+ */
+
+/**
+ * Implementation of hook_preprocess_views_view_summary().
+ */
+function seed_preprocess_views_view_summary(&$vars) {
+  if (count($vars['rows']) > 8) {
+    $form = drupal_get_form('seed_views_view_summary_form', $vars['rows']);
+    $vars['form'] = $form;
+  }
+}
+
+/**
+ * Form for handling archive override.
+ */
+function seed_views_view_summary_form(&$form, $rows) {
+  $form = array();
+  $options = array(0 => '----');
+  $base = base_path();
+  foreach ($rows as $row) {
+    $url = substr($row->url, strlen($base));
+    $options[$url] = t('!date (!count)', array('!date' => $row->link, '!count' => $row->count));
+  }
+  $form['summary'] = array(
+    '#type' => 'select',
+    '#options' => $options,
+  );
+  $form['submit'] = array(
+    '#submit' => array('seed_views_view_summary_form_submit'),
+    '#type' => 'submit',
+    '#value' => t('Go'),
+  );
+  return $form;
+}
+
+/**
+ * Submit handler for summary form.
+ */
+function seed_views_view_summary_form_submit($form, &$form_state) {
+  $url = $form_state['values']['summary'];
+  if ($url != 0) {
+    drupal_goto($url);
+  }
+}
+
+/**
+ * Implementation of hook_preprocess_node_form().
+ */
+function seed_preprocess_node_form(&$vars) {
+  drupal_add_css(drupal_get_path('module', 'seed') .'/theme/seed.css');
+
+  $form = $vars['form'];
+
+  context_set('theme', 'layout', 'wide');
+
+  $vars['type'] = $form['#node']->type ? $form['#node']->type : '';
+
+  // Move form elements to the sidebar if their name starts with sidebar.
+  foreach ($form as $k => $elem) {
+    if (strpos($k, 'group_sidebar') === 0) {
+      $vars['sidebar'][$k] = $form[$k];
+      unset($form[$k]);
+    }
+  }
+
+  foreach (array('i18n', 'spaces_og') as $key) {
+    if (isset($form[$key])) {
+      $vars['sidebar'][$key] = $form[$key];
+      unset($form[$key]);
+    }
+  }
+
+  foreach (array('taxonomy', 'options') as $key) {
+    if (isset($form[$key])) {
+      $form[$key]['#collapsible'] = false;
+      $vars['sidebar'][$key] = $form[$key];
+      unset($form[$key]);
+    }
+  }
+
+  foreach (array('comment_settings', 'author', 'path', 'menu', 'revision_information') as $key) {
+    if (isset($form[$key])) {
+      $vars['sidebar'][$key] = $form[$key];
+      unset($form[$key]);
+    }
+  }
+
+  $vars['buttons'] = $form['buttons'];
+  unset($form['buttons']);
+
+  $vars['form'] = $form;
+  $vars['form_classes'] = !empty($vars['sidebar']) ? 'form-sidebar' : '';
+}
+
+/**
+ * Implementation of hook_preprocess_user_profile_form().
+ */
+function seed_preprocess_user_profile_form(&$vars) {
+  drupal_add_css(drupal_get_path('module', 'seed') .'/theme/seed.css');
+
+  $vars['#form'] = $vars['form']; // Preserve form for other preprocesses down the line.
+  $form = $vars['form'];
+
+  context_set('theme', 'layout', 'wide');
+
+  // Move picture + messaging to sidebar
+  foreach (array('picture', 'messaging') as $key) {
+    $vars['sidebar'][$key] = $form[$key];
+    unset($form[$key]);
+  }
+
+  // Move user status + roles into sidebar fieldset
+  if (isset($form['account']['status'])) {
+    $status = array(
+      '#type' => 'fieldset',
+      '#title' => t('User administration'),
+    );
+    $status['#children'] = drupal_render($form['account']['status']);
+    $status['#children'] .= drupal_render($form['account']['roles']);
+    $vars['sidebar']['user_admin'] = $status;
+  }
+
+  // Hide theme settings
+  $vars['hidden']['theme_select'] = $form['theme_select'];
+
+  foreach ($form as $id => $element) {
+    if (!empty($element['#type']) && in_array($element['#type'], array('submit', 'button'))) {
+      $vars['buttons'][] = $form[$id];
+      unset($form[$id]);
+    }
+  }
+
+  $vars['form'] = $form;
+  $vars['form_classes'] = !empty($vars['sidebar']) ? 'form-sidebar' : '';
+}
+
+/**
+ * Implementation of hook_preprocess_user_login().
+ */
+function seed_preprocess_user_login(&$vars) {
+  $vars['buttons'] = $vars['form']['submit'];
+  unset($vars['form']['submit']);
+}
+
+/**
+ * Implementation of hook_preprocess_user_pass().
+ */
+function seed_preprocess_user_pass(&$vars) {
+  $vars['buttons'] = $vars['form']['submit'];
+  unset($vars['form']['submit']);
+}
+
+/**
+ * Implementation of hook_preprocess_user_picture().
+ */
+function seed_preprocess_user_picture(&$vars) {
+  $account = $vars['account'];
+  if (isset($account->picture) && module_exists('imagecache')) {
+    $attr = array('class' => 'user-picture');
+    $preset = variable_get('seed_imagecache_user_picture', '30x30_crop');
+    $attr['class'] .= ' picture-'. $preset;
+    if (file_exists($account->picture)) {
+      $image = imagecache_create_url($preset, $account->picture);
+      $attr['style'] = 'background-image: url('. $image .')';
+    }
+    $path = 'user/'. $account->uid;
+    $vars['picture'] = l($account->name, $path, array('attributes' => $attr));
+    $vars['preset'] = $preset;
+  }
+}
+
+function template_preprocess_seed_faux_field(&$vars) {
+  $vars = array_merge($vars, $vars['element']);
+  unset($vars['element']);
+}

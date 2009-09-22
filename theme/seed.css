@@ -1,0 +1,179 @@
+/**
+ * Fileview.
+ */
+table#attachments td.attachment { width:80%; }
+table#attachments td.filesize { white-space:nowrap; }
+
+div.fileview,
+div.fileview a {
+  width:60px; height:40px;}
+
+  div.fileview a {
+    background-repeat:no-repeat;
+    background-position:50% 50%;
+    display:block;
+    }
+
+.fileview .application-pdf,
+.fileview .application-msword {
+  background-image: url(file-types/icon-pdf.png);}
+
+.fileview .application-vnd-ms-excel {
+  background-image: url(file-types/icon-xls.png);}
+
+.fileview .application-vnd-ms-powerpoint {
+  background-image: url(file-types/icon-keynote.png);}
+
+.fileview .application-zip,
+.fileview .application-x-download {
+  background-image: url(file-types/icon-zip.png);}
+
+.fileview .audio-mpeg {
+  background-image: url(file-types/icon-audio.png);}
+
+.fileview .text-calendar {
+  background-image: url(file-types/icon-ical.png);}
+
+.fileview .text-html {
+  background-image: url(file-types/icon-html.png);}
+
+.fileview .text-plain {
+  background-image: url(file-types/icon-txt.png);}
+
+.fileview .video-quicktime {
+  background-image: url(file-types/icon-quicktime.png);}
+
+.fileview .image-svg-xml,
+.fileview .application-postscript {
+  background-image: url(file-types/icon-graffle.png);}
+
+/**
+ * Filter options
+ */
+div.filter-target div.form-item { margin:0px; }
+
+div.filter-options {
+  font-size:11px;
+  margin:0px 0px 20px;
+  }
+
+div.filter-options div.form-item select {
+  width:auto;
+  font-size:11px;
+  }
+
+div.filter-options div.form-item,
+div.filter-options div.filter-help {
+  background:#f8f8f8;
+  padding:5px;
+  margin:0px;
+  line-height:20px;
+  height:20px;
+  float:left;
+  }
+
+/*
+ * If custom seed module filter formats are disabled (e.g. to avoid conflict with WYSIWYG),
+ * we should at least hide the obnoxiously long filter format tips.
+ */
+div.form-item div.description ul.tips { display:none; }
+
+/**
+ * Numbered forms.
+ */
+div.form-item-counter {
+  padding-left:40px;
+  position:relative;
+  }
+
+div.form-item-counter span.counter {
+  background:#ccc;
+  color:#fff;
+  font-weight:bold;
+  font-size:11px;
+  width:30px;
+  line-height:20px;
+  text-align:center;
+  position:absolute;
+  left:0px;
+  top:0px;
+
+  -moz-border-radius:3px;
+  -webkit-border-radius:3px;
+  }
+
+/**
+ * Crayon coloring
+ */
+.crayon-0  {background-color: #e00;}
+.crayon-1  {background-color: #fa0;}
+.crayon-2  {background-color: #6e0;}
+.crayon-3  {background-color: #0c9;}
+.crayon-4  {background-color: #06c;}
+.crayon-5  {background-color: #66c;}
+.crayon-6  {background-color: #c08;}
+
+.crayon-7  {background-color: #c66;}
+.crayon-8  {background-color: #654;}
+.crayon-9  {background-color: #088;}
+.crayon-10 {background-color: #246;}
+.crayon-11 {background-color: #668;}
+.crayon-12 {background-color: #5a5;}
+.crayon-13 {background-color: #933;}
+
+.crayon-14 {background-color: #aaa;}
+.crayon-15 {background-color: #555;}
+
+.crayon-swatch {
+  width:30px;
+  height:15px;
+  line-height:15px;
+  margin:0px auto;
+  display:block;
+  }
+
+  .crayon-swatch:hover { position:relative; }
+
+  .crayon-swatch span.label {
+    height:15px;
+    text-align:center;
+    color:#fff;
+    font-size:9px;
+    display:block;
+    overflow:hidden;
+    }
+
+.crayon span.crayon-popup { display:none; }
+
+.crayon:hover span.crayon-popup {
+  display:block;
+
+  position:absolute;
+  left:50%;
+  bottom:5px;
+  z-index:1000;
+
+  width:150px;
+  margin-left:-24px;
+  padding:0px 0px 10px;
+
+  overflow:hidden;
+  opacity:.8;
+  background: url(images/popup.png) 20px 100% no-repeat;
+  }
+
+  .crayon:hover span.crayon-popup span.crayon-popup-label {
+    display:block;
+    padding:10px;
+    background:#000;
+    color:#fff;
+    -moz-border-radius:5px;
+    }
+
+  .crayon:hover span.crayon-popup * { display:inline; }
+
+span.crayon-marker {
+  display:inline;
+  padding:0em .6em;
+  margin-right:.5em;
+  }
