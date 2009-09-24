@@ -336,6 +336,8 @@ function _seed_filter_form_alter(&$form) {
 function seed_link($type, $object, $teaser = FALSE) {
   $links = array();
   if ($type == 'node' && menu_get_object() === $object) {
+    // Set the canonical URL so search engines don't index the print friendlies.
+    drupal_add_link(array('rel' => 'canonical', 'href' => url($_GET['q'], array('absolute' => TRUE))));
     $links['print'] = array(
       'title' => t('Print'),
       'href' => $_GET['q'],
