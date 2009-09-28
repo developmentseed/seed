@@ -670,9 +670,6 @@ function seed_preprocess_user_profile_form(&$vars) {
     $vars['sidebar']['user_admin'] = $status;
   }
 
-  // Hide theme settings
-  $vars['hidden']['theme_select'] = $form['theme_select'];
-
   foreach ($form as $id => $element) {
     if (!empty($element['#type']) && in_array($element['#type'], array('submit', 'button'))) {
       $vars['buttons'][] = $form[$id];
@@ -719,7 +716,30 @@ function seed_preprocess_user_picture(&$vars) {
   }
 }
 
+/**
+ * Preprocessor for faux CCK field markup.
+ */
 function template_preprocess_seed_faux_field(&$vars) {
   $vars = array_merge($vars, $vars['element']);
   unset($vars['element']);
+}
+
+/**
+ * Add an href-based class to links for themers to implement icons.
+ */
+function seed_icon_links(&$links) {
+  if (!empty($links)) {
+    foreach ($links as $k => $v) {
+      if (empty($v['attributes'])) {
+        $v['attributes'] = array('class' => '');
+      }
+      else if (empty($v['attributes']['class'])) {
+        $v['attributes']['class'] = '';
+      }
+      $v['attributes']['class'] .= ' icon-'. seed_id_safe(drupal_get_path_alias($v['href']));
+      $v['title'] = "<span class='icon'></span><span class='label'>". $v['title'] ."</span>";
+      $v['html'] = true;
+      $links[$k] = $v;
+    }
+  }
 }

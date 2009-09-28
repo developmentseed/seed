@@ -215,34 +215,6 @@ function theme_seed_crayon_swatch($id, $label, $popup = NULL, $path = NULL, $col
   }
 }
 
-/** 
- * Theme function for split taxonomies
- */
-function theme_seed_taxonomy_split($sorted_terms) {
-  foreach ($sorted_terms as $key => $term_group) {
-
-    // HTML wrapper per vocabulary
-    $output .= '<div class="taxonomy-groups" id="taxonomy_vocabulary_'. $key .'">';
-
-    // Name of vocabulary
-    $output .= '<span class="taxonomy-label">'. taxonomy_vocabulary_load($key)->name .'</span>: ';
-  
-    // Prepare links to terms
-    $links = array();
-	  foreach ($term_group as $term) {		
-      if (is_object($term)) {
-        $links['taxonomy_term_'. $term->tid] = array(
-          'title' => $term->name,
-          'href' => taxonomy_term_path($term),
-          'attributes' => array('rel' => 'tag', 'title' => strip_tags($term->description))
-        );
-      }
-    }
-    $output .= theme('links', $links, array('class' => 'links inline'));
-  }
-  return $output;
-}
-
 /**
  *  Attachments
  */
@@ -321,42 +293,4 @@ function seed_fileview($file) {
     break;
   }
   return "<div class='fileview'>$o</div>";
-}
-
-/**
- * Add an href-based class to links for themers to implement icons.
- */
-function seed_icon_links(&$links) {
-  if (!empty($links)) {
-    foreach ($links as $k => $v) {
-      if (empty($v['attributes'])) {
-        $v['attributes'] = array('class' => '');
-      }
-      else if (empty($v['attributes']['class'])) {
-        $v['attributes']['class'] = '';
-      }
-      $v['attributes']['class'] .= ' icon-'. seed_id_safe(drupal_get_path_alias($v['href']));
-      $v['title'] = "<span class='icon'></span><span class='label'>". $v['title'] ."</span>";
-      $v['html'] = true;
-      $links[$k] = $v;
-    }
-  }
-}
-
-/**
- * Groups taxonomy terms by their vocabulary
- * @param $taxonomy: Array of taxonomy terms to sort
- * @return $sorted_terms: Array of sorted taxonomy terms
- */
-function seed_taxonomy_split($taxonomy) {
-  $sorted_terms = array();
-  foreach ($taxonomy as $term) {
-    if(array_key_exists($term->vid, $sorted_terms)) {
-      array_push($sorted_terms[$term->vid], $term);
-    }
-    else {
-      $sorted_terms[$term->vid] = array($term);
-    }
-  }
-  return $sorted_terms;
 }
