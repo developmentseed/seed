@@ -599,6 +599,11 @@ function seed_views_view_summary_form_submit($form, &$form_state) {
 function seed_preprocess_node_form(&$vars) {
   drupal_add_css(drupal_get_path('module', 'seed') .'/theme/seed.css');
 
+  // Init variables.
+  $vars['main'] = !isset($vars['main']) ? array() : $vars['main'];
+  $vars['sidebar'] = !isset($vars['sidebar']) ? array() : $vars['sidebar'];
+  $vars['buttons'] = !isset($vars['buttons']) ? array() : $vars['buttons'];
+
   $form = $vars['form'];
 
   context_set('theme', 'layout', 'wide');
@@ -648,6 +653,11 @@ function seed_preprocess_node_form(&$vars) {
 function seed_preprocess_user_profile_form(&$vars) {
   drupal_add_css(drupal_get_path('module', 'seed') .'/theme/seed.css');
 
+  // Init variables.
+  $vars['main'] = !isset($vars['main']) ? array() : $vars['main'];
+  $vars['sidebar'] = !isset($vars['sidebar']) ? array() : $vars['sidebar'];
+  $vars['buttons'] = !isset($vars['buttons']) ? array() : $vars['buttons'];
+
   $vars['#form'] = $vars['form']; // Preserve form for other preprocesses down the line.
   $form = $vars['form'];
 
@@ -669,9 +679,6 @@ function seed_preprocess_user_profile_form(&$vars) {
     $status['#children'] .= drupal_render($form['account']['roles']);
     $vars['sidebar']['user_admin'] = $status;
   }
-
-  // Hide theme settings
-  $vars['hidden']['theme_select'] = $form['theme_select'];
 
   foreach ($form as $id => $element) {
     if (!empty($element['#type']) && in_array($element['#type'], array('submit', 'button'))) {
