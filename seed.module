@@ -433,8 +433,10 @@ function seed_taxonomy_display(&$node, $teaser = FALSE) {
               'items' => array(
                 array('view' => $content),
               ),
-              'field_name' => '',
+              'field_name' => "taxonomy_vocab_{$vid}",
+              'field_name_css' => "taxonomy-vocab-{$vid}",
               'field_type' => 'taxonomy',
+              'field_type_css' => 'taxonomy',
               'label' => $label,
               'label_display' => 'above',
               'field_empty' => FALSE,
