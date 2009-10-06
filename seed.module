@@ -262,10 +262,12 @@ function seed_form_alter(&$form, $form_state, $form_id) {
   }
   if ($form['#id'] == 'node-form') {
     // Hiding the ridiculous body splitting shiz
-    $form['body_field']['teaser_js']['#type'] = 'hidden';
-    $form['body_field']['teaser_include']['#type'] = 'hidden';
-    if (!empty($form['body_field']['body']['#rows']) && $form['body_field']['body']['#rows'] > 10) {
-      $form['body_field']['body']['#rows'] = 10;
+    if (!empty($form['body_field'])) {
+      $form['body_field']['teaser_js']['#type'] = 'hidden';
+      $form['body_field']['teaser_include']['#type'] = 'hidden';
+      if (!empty($form['body_field']['body']['#rows']) && $form['body_field']['body']['#rows'] > 10) {
+        $form['body_field']['body']['#rows'] = 10;
+      }
     }
 
     // Remove revision information fields for most users
