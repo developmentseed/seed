@@ -261,6 +261,18 @@ function seed_form_alter(&$form, $form_state, $form_id) {
       break;
   }
   if ($form['#id'] == 'node-form') {
+    // Hide these elements based on checks. Useful for improving usability
+    // for super-permissioned users like user 1.
+    $hidden = array(
+      'attachments' => variable_get("{$form['#node']->type}_upload", TRUE),
+      'book' => in_array($form['#node']->type, variable_get('book_allowed_types', array('book'))),
+    );
+    foreach ($hidden as $key => $access) {
+      if (isset($form[$key]) && !$access) {
+        $form[$key]['#access'] = FALSE;
+      }
+    }
+
     // Hiding the ridiculous body splitting shiz
     if (!empty($form['body_field'])) {
       $form['body_field']['teaser_js']['#type'] = 'hidden';
