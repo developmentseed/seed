@@ -227,7 +227,7 @@ function seed_upload_attachments($files) {
     if ($file->list) {
       $href = check_url(($file->fid ? file_create_url($file->filepath) : url(file_create_filename($file->filename, file_create_path()))));
       $text = $file->description ? $file->description : $file->filename;
-      $fileview = seed_fileview($file);
+      $fileview = theme('seed_fileview', $file);
       $rows[] = array(
         array('data' => $fileview, 'class' => 'preview'),
         array('data' => l($text, $href), 'class' => 'attachment'),
@@ -272,9 +272,16 @@ function theme_seed_audio($audio) {
 }
 
 /**
- * Show icons or a preview of image filetypes
+ * Backwards-compatibility wrapper to calls to "seed_fileview".
  */
 function seed_fileview($file) {
+  return theme('seed_fileview');
+}
+
+/**
+ * Show icons or a preview of image filetypes
+ */
+function theme_seed_fileview($file) {
   drupal_add_css(drupal_get_path('module', 'seed') .'/theme/seed.css');
   $o = '';
   $href = check_url(($file->fid ? file_create_url($file->filepath) : url(file_create_filename($file->filename, file_create_path()))));

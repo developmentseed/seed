@@ -25,6 +25,7 @@ function seed_theme() {
     'seed_term_list' => $base,
     'seed_numbered_element' => $base,
     'seed_taxonomy_display_form' => $base,
+    'seed_fileview' => $base,
 
     // Template overrides
     'node_form' => $base + array(
@@ -266,6 +267,7 @@ function seed_form_alter(&$form, $form_state, $form_id) {
     $hidden = array(
       'attachments' => variable_get("{$form['#node']->type}_upload", TRUE),
       'book' => in_array($form['#node']->type, variable_get('book_allowed_types', array('book'))),
+      'revision_information' => in_array('revision', variable_get("node_options_{$form['#node']->type}", array('status', 'promote'))),
     );
     foreach ($hidden as $key => $access) {
       if (isset($form[$key]) && !$access) {
