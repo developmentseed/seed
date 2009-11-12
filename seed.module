@@ -54,11 +54,11 @@ function seed_theme() {
     ),
   );
   if (module_exists('content')) {
-    $items['seed_faux_field'] = $base + array(
+    $items['seed_faux_field'] = array(
       'arguments' => array('element' => NULL),
       'template' => 'content-field',
       'path' => drupal_get_path('module', 'content') . '/theme',
-    );
+    ) + $base;
   }
   return $items;
 }
