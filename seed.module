@@ -557,6 +557,8 @@ function seed_rel_date($timestamp) {
  * Turn string into CSS id/class -- from Zen theme
  */
 function seed_id_safe($string) {
+  $string = trim($string);
+  $string = trim($string, '/\,.;:?--=+');
   if (is_numeric($string{0})) {
     // if the first character is numeric, add 'n' in front
     $string = 'n'. $string;
