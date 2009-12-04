@@ -18,6 +18,7 @@ div.fileview a {
 .fileview .application-msword {
   background-image: url(file-types/icon-pdf.png);}
 
+.fileview .text-csv,
 .fileview .application-vnd-ms-excel {
   background-image: url(file-types/icon-xls.png);}
 
