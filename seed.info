@@ -1,6 +1,5 @@
 core = "6.x"
 dependencies[] = "context"
-dependencies[] = "context_contrib"
 description = "Collection of useful theme overrides and alters to Drupal defaults."
 name = "Seed"
 package = "Other"
