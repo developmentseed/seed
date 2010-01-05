@@ -188,7 +188,7 @@ function theme_seed_crayon_popup($id, $label, $color = NULL) {
 /**
  * A small swatch of color with label that has a popup with more info on hover.
  */
-function theme_seed_crayon_swatch($id, $label, $popup = NULL, $path = NULL, $color = NULL) {
+function theme_seed_crayon_swatch($id, $label, $popup = NULL, $path = NULL, $options = array(), $color = NULL) {
   $popup = empty($popup) ? $label : $popup;
   $popup = theme('seed_crayon_popup', $id, $popup, $color);
 
@@ -202,7 +202,7 @@ function theme_seed_crayon_swatch($id, $label, $popup = NULL, $path = NULL, $col
       'class' => 'crayon crayon-swatch crayon-'. $crayon,
       'style' => !empty($style) ? $style : NULL,
     ),
-  );
+  ) + $options;
 
   $content = "<span class='label'>$label</span>$popup";
 
