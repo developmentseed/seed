@@ -88,14 +88,37 @@ function seed_theme_registry_alter(&$theme_registry) {
 }
 
 /**
+ * Implementation of hook_ctools_plugin_api().
+ */
+function seed_ctools_plugin_api($module, $api) {
+  if ($module == "system" && $api == "strongarm") {
+    return array("version" => 1);
+  }
+}
+
+/**
  * Implementation of hook_strongarm().
  * Forces use of seed 404 callback if strongarm module is present.
  */
 function seed_strongarm() {
-  $conf = array();
-  $conf['site_403'] = 'access-denied';
-  $conf['site_404'] = 'not-found';
-  return $conf;
+  $export = array();
+
+  $strongarm = new stdClass;
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'site_403';
+  $strongarm->value = 'access-denied';
+
+  $export['site_403'] = $strongarm;
+
+  $strongarm = new stdClass;
+  $strongarm->disabled = FALSE; /* Edit this to true to make a default strongarm disabled initially */
+  $strongarm->api_version = 1;
+  $strongarm->name = 'site_404';
+  $strongarm->value = 'not-found';
+
+  $export['site_404'] = $strongarm;
+  return $export;
 }
 
 /**
