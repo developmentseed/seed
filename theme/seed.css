@@ -169,6 +169,7 @@ div.form-item-counter span.counter {
     background:#000;
     color:#fff;
     -moz-border-radius:5px;
+    -webkit-border-radius:5px;
     }
 
   .crayon:hover span.crayon-popup * { display:inline; }
