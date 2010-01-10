@@ -198,7 +198,7 @@ function seed_nodeapi(&$node, $op, $teaser = NULL, $page = NULL) {
       $node->content['body']['#suffix'] = "</div>";
 
       // Book Navigation
-      if (module_exists('book') && book_type_is_allowed($node->type)) {
+      if (module_exists('book') && isset($node->content['book_navigation'])) {
         $seed_book = variable_get('seed_book', array());
         if (empty($seed_book['book_nav'])) {
           unset($node->content['book_navigation']);
@@ -568,7 +568,7 @@ function seed_rel_date($timestamp) {
   else if ($day == $slots['yesterday']) {
     return t('!time Yesterday', array('!time' => format_date($timestamp, 'custom', $formats['time'])));
   }
-  else if ($timestamp < $slots['month_within'] ) {
+  else if ($timestamp > $slots['month_within'] ) {
     return format_date($timestamp, 'custom', $formats['month_within']);
   }
   else {
