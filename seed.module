@@ -91,7 +91,7 @@ function seed_theme_registry_alter(&$theme_registry) {
  * Implementation of hook_ctools_plugin_api().
  */
 function seed_ctools_plugin_api($module, $api) {
-  if ($module == "system" && $api == "strongarm") {
+  if ($module == "strongarm" && $api == "strongarm") {
     return array("version" => 1);
   }
 }
