@@ -416,6 +416,39 @@ function seed_views_api() {
 }
 
 /**
+ * Render a set of terms. Handles hierarchical displays of terms.
+ */
+function seed_taxonomy_display_render_terms($terms, $hierarchy = FALSE) {
+  $items = array();
+  // Hierarchical vocab.
+  if ($hierarchy) {
+    $genealogy = array();
+    foreach ($terms as $tid => $term) {
+      $ancestry = array_reverse(taxonomy_get_parents_all($term->tid));
+      $root = $ancestry[0];
+      if (!isset($genealogy[$root->tid]) || (count($ancestry) > count($genealogy[$root->tid]))) {
+        $genealogy[$root->tid] = $ancestry;
+      }
+    }
+    foreach ($genealogy as $ancestry) {
+      $chain = array();
+      foreach ($ancestry as $term) {
+        $chain[] = l($term->name, taxonomy_term_path($term));
+      }
+      // @TODO: Make this themable.
+      $items[] = implode(' &raquo; ', $chain);
+    }
+  }
+  // Flat.
+  else {
+    foreach ($terms as $tid => $term) {
+      $items[] = l($term->name, taxonomy_term_path($term));
+    }
+  }
+  return $items;
+}
+
+/**
  * Taxonomy display helper for nodes.
  */
 function seed_taxonomy_display(&$node, $teaser = FALSE) {
@@ -453,10 +486,7 @@ function seed_taxonomy_display(&$node, $teaser = FALSE) {
         switch ($display) {
           case SEED_TAXONOMY_FIELDTERMS:
           case SEED_TAXONOMY_FIELDLIST:
-            $items = array();
-            foreach ($terms[$vid] as $term) {
-              $items[] = l($term->name, taxonomy_term_path($term));
-            }
+            $items = seed_taxonomy_display_render_terms($terms[$vid], $vocabs[$vid]->hierarchy);
             $content = ($display == SEED_TAXONOMY_FIELDTERMS) ? implode(", ", $items) : theme('item_list', $items);
             break;
         }
