@@ -436,7 +436,7 @@ function seed_taxonomy_display_render_terms($terms, $hierarchy = FALSE) {
         $chain[] = l($term->name, taxonomy_term_path($term));
       }
       // @TODO: Make this themable.
-      $items[] = implode(' &raquo; ', $chain);
+      $items[] = implode(' &rsaquo; ', $chain);
     }
   }
   // Flat.
