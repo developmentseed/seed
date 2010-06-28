@@ -423,20 +423,28 @@ function seed_taxonomy_display_render_terms($terms, $hierarchy = FALSE) {
   // Hierarchical vocab.
   if ($hierarchy) {
     $genealogy = array();
+    $parents = array();
     foreach ($terms as $tid => $term) {
       $ancestry = array_reverse(taxonomy_get_parents_all($term->tid));
+      foreach ($ancestry as $ancestor) {
+        if ($ancestor-> tid != $term->tid) {
+          $parents[$ancestor->tid] = $ancestor->tid;
+        }
+      }
       $root = $ancestry[0];
-      if (!isset($genealogy[$root->tid]) || (count($ancestry) > count($genealogy[$root->tid]))) {
-        $genealogy[$root->tid] = $ancestry;
+      if (!isset($genealogy[$term->tid]) || (count($ancestry) > count($genealogy[$root->tid]))) {
+        $genealogy[$term->tid] = $ancestry;
       }
     }
-    foreach ($genealogy as $ancestry) {
-      $chain = array();
-      foreach ($ancestry as $term) {
-        $chain[] = l($term->name, taxonomy_term_path($term));
+    foreach ($genealogy as $leaf => $ancestry) {
+      if (!in_array($leaf, $parents)) {
+        $chain = array();
+        foreach ($ancestry as $term) {
+            $chain[] = l($term->name, taxonomy_term_path($term));
+        }
+        // @TODO: Make this themable.
+        $items[] = implode(' &rsaquo; ', $chain);
       }
-      // @TODO: Make this themable.
-      $items[] = implode(' &rsaquo; ', $chain);
     }
   }
   // Flat.
