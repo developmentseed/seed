@@ -54,6 +54,9 @@ class seed_handler_field_date extends views_handler_field_date {
       case 'time ago':
         return $value ? t('%time ago', array('%time' => format_interval(time() - $value, is_numeric($custom_format) ? $custom_format : 2))) : theme('views_nodate');
       case 'custom':
+        if ($custom_format == 'r') {
+          return format_date($value, $format, $custom_format, null, 'en');
+        }
         return $value ? format_date($value, $format, $custom_format) : theme('views_nodate');
       default:
         return $value ? format_date($value, $format) : theme('views_nodate');
