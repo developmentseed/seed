@@ -300,8 +300,10 @@ function seed_form_alter(&$form, $form_state, $form_id) {
 
     // Hiding the ridiculous body splitting shiz
     if (!empty($form['body_field'])) {
-      $form['body_field']['teaser_js']['#type'] = 'hidden';
-      $form['body_field']['teaser_include']['#type'] = 'hidden';
+      if (isset($form['body_field']['teaser_js'], $form['body_field']['teaser_include'])) {
+        unset($form['body_field']['teaser_js']);
+        unset($form['body_field']['teaser_include']);
+      }
       if (!empty($form['body_field']['body']['#rows']) && $form['body_field']['body']['#rows'] > 10) {
         $form['body_field']['body']['#rows'] = 10;
       }
