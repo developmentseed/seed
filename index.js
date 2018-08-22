@@ -3,12 +3,7 @@
 var path = require('path')
 var subcommand = require('subcommand')
 
-var config = require('./lib/config')()
-var profile = config.get('currentProfile') || {}
-
-var defaults = Object.keys(profile).map(function (key) {
-  return { name: key, default: profile[key] }
-})
+var defaults = [];
 
 defaults.push({
   name: 'package',
@@ -16,7 +11,6 @@ defaults.push({
 })
 
 var match = subcommand({
-  root: require('./commands/help'),
   defaults: defaults,
   commands: [
     require('./commands/readme')

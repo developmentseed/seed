@@ -1,23 +1,29 @@
-# Seed
+# testing
 
-A command-line assistant for creating & maintaining projects at Development Seed.
+## About
 
 ## Install
 
-```
-npm install -g seed
-```
-
-## Use
-
-```
-USAGE
-  seed {command} [options]
-
-COMMANDS
-  readme            create a README.md file
-
-HELP
-  Run seed help {command} to see options for that command.
+```sh
+npm install --save testing
 ```
 
+## Usage
+
+```js
+
+```
+
+## Documentation
+
+### Examples
+
+## Contributing
+
+## Conduct
+
+## Changelog
+
+## Contact
+
+## License
