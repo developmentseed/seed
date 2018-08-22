@@ -1,0 +1,25 @@
+{
+  "name": "@developmentseed/seed",
+  "version": "0.0.0",
+  "description": "DS templates for everything",
+  "main": "index.js",
+  "bin": {
+    "seed": "index.js"
+  },  
+  "scripts": {
+    "test": "npm run lint && node tests/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/developmentseed/seed.git"
+  },
+  "author": "developmentseed",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/developmentseed/seed/issues"
+  },
+  "homepage": "https://github.com/developmentseed/seed#readme",
+  "dependencies": {
+    "handlebars": "^4.0.11"
+  }
+}
