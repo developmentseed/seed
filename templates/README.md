@@ -5,12 +5,11 @@
 ## Install
 
 ```sh
-npm install --save {{package}}
 ```
 
 ## Usage
 
-```js
+```sh
 
 ```
 
